@@ -17,19 +17,24 @@
 package com.doctoror.gifimageloader.sample;
 
 /**
- * Interface required for {@link AspectRatioWidgetMethods}
+ * Stores various configurations
  */
-public interface AspectRatioWidget {
+public final class Configuration {
 
-    void setAspect(float aspect);
+    private Configuration() {
 
-    void setAspectType(int aspectType);
+    }
 
-    void superOnMeasure(int widthMeasureSpec, int heightMeasureSpec);
+    private static final int DEFAULT_CACHE_SIZE = 1024 * 1024 * 10; // 10 MiB
 
-    void requestLayout();
+    public static final int LRU_CACHE_SIZE_IN_BYTES;
 
-    int getMeasuredWidth();
-
-    int getMeasuredHeight();
+    static {
+        final long thirdOfMemory = Runtime.getRuntime().maxMemory() / 3L;
+        if (DEFAULT_CACHE_SIZE > thirdOfMemory) {
+            LRU_CACHE_SIZE_IN_BYTES = (int) thirdOfMemory;
+        } else {
+            LRU_CACHE_SIZE_IN_BYTES = DEFAULT_CACHE_SIZE;
+        }
+    }
 }
