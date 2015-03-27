@@ -20,7 +20,9 @@ package com.doctoror.gifimageloader;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -51,15 +53,22 @@ public class NetworkGifImageView extends GifImageView {
     private GifImageLoader.ImageContainer mImageContainer;
 
     public NetworkGifImageView(Context context) {
-        this(context, null);
+        super(context);
     }
 
     public NetworkGifImageView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        super(context, attrs);
     }
 
     public NetworkGifImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public NetworkGifImageView(final Context context, final AttributeSet attrs,
+            final int defStyleAttr,
+            final int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
     }
 
     /**

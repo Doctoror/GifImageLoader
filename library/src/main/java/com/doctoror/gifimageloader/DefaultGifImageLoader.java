@@ -104,6 +104,7 @@ public final class DefaultGifImageLoader extends GifImageLoader {
                 }
             }
             if (value.movie != null) {
+                // TODO Bad way to determine Movie size. Is there a better way?
                 return (int) (value.movie.width() * value.movie.height() * Math
                         .max((double) value.movie.duration() / 1000d, 1d));
             }

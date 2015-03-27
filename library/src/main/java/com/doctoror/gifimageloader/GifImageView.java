@@ -22,6 +22,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Movie;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
@@ -59,6 +60,8 @@ public class GifImageView extends ImageView {
 
     private final Rect mMovieBounds = new Rect();
 
+    private Paint mPaint;
+
     public GifImageView(final Context context) {
         super(context);
         init(context);
@@ -87,6 +90,10 @@ public class GifImageView extends ImageView {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             setLayerType(LAYER_TYPE_SOFTWARE, null);
         }
+    }
+
+    public void setPaint(final Paint paint) {
+        mPaint = paint;
     }
 
     public void setAnimatedGif(final byte[] byteArray) {
@@ -327,6 +334,7 @@ public class GifImageView extends ImageView {
 
             if (ScaleType.MATRIX == getScaleType()) {
                 // Use the specified matrix as-is.
+                //noinspection IfMayBeConditional
                 if (mMatrix.isIdentity()) {
                     mDrawMatrix = null;
                 } else {
@@ -373,6 +381,7 @@ public class GifImageView extends ImageView {
                 float dx;
                 float dy;
 
+                //noinspection IfMayBeConditional
                 if (dwidth <= vwidth && dheight <= vheight) {
                     scale = 1.0f;
                 } else {
@@ -478,7 +487,7 @@ public class GifImageView extends ImageView {
                     c.scale((float) c.getWidth() / (float) mMovie.width(),
                             (float) c.getHeight() / (float) mMovie.height());
 
-                    mMovie.draw(c, mMovieBounds.left, mMovieBounds.top);
+                    mMovie.draw(c, mMovieBounds.left, mMovieBounds.top, mPaint);
                     c.restoreToCount(saveCount);
                 } else {
                     final int saveCount = c.getSaveCount();
@@ -498,7 +507,7 @@ public class GifImageView extends ImageView {
                         c.concat(mDrawMatrix);
                     }
 
-                    mMovie.draw(c, mMovieBounds.left, mMovieBounds.top);
+                    mMovie.draw(c, mMovieBounds.left, mMovieBounds.top, mPaint);
                     c.restoreToCount(saveCount);
                 }
                 invalidate();
