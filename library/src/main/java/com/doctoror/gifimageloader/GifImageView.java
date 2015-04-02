@@ -16,6 +16,7 @@
 
 package com.doctoror.gifimageloader;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -85,6 +86,7 @@ public class GifImageView extends ImageView {
         init(context);
     }
 
+    @SuppressLint("NewApi")
     private void init(final Context context) {
         mNullBitmapDrawable = new BitmapDrawable(context.getResources(), (Bitmap) null);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -144,12 +146,7 @@ public class GifImageView extends ImageView {
         return result;
     }
 
-    @Override
-    protected void onSizeChanged(final int w, final int h, final int oldw, final int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-        //configureBounds();
-    }
-
+    @SuppressLint("NewApi")
     @Override
     protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
         if (mMovie != null) {
@@ -418,6 +415,7 @@ public class GifImageView extends ImageView {
         return sS2FArray[scaleTypeNativeInt(st) - 1];
     }
 
+    @SuppressLint("NewApi")
     private static int scaleTypeNativeInt(@NonNull final ScaleType scaleType) {
         try {
             final Field nativeIntField = ScaleType.class.getDeclaredField("nativeInt");

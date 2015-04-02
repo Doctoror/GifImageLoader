@@ -18,6 +18,7 @@ package com.doctoror.gifimageloader;
 
 import com.android.volley.toolbox.Volley;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -94,6 +95,7 @@ public final class DefaultGifImageLoader extends GifImageLoader {
             put(url, image);
         }
 
+        @SuppressLint("NewApi")
         @Override
         protected int sizeOf(final String key, final Image value) {
             if (value.bitmap != null) {
