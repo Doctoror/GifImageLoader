@@ -80,13 +80,16 @@ public class DemoActivity extends ActionBarActivity {
 
         @Override
         public View getView(final int position, View convertView, final ViewGroup parent) {
+            final NetworkGifImageView imageView;
             if (convertView == null) {
                 convertView = getLayoutInflater().inflate(R.layout.grid_item_demo, parent, false);
+                imageView = (NetworkGifImageView) convertView.findViewById(R.id.image);
+                convertView.setTag(imageView);
+            } else {
+                imageView = (NetworkGifImageView) convertView.getTag();
             }
 
-            final NetworkGifImageView imageView = (NetworkGifImageView) convertView;
             imageView.setImageInfo(getItem(position), mImageLoader);
-
             return convertView;
         }
     }
