@@ -5,6 +5,18 @@ GifImageView allows to display animated gifs (not currently working with scaleTy
 
 GifImageView has API just like a normal Volley NetworkImageView by calling setImageUrl() but also has the ability to set ImageInfo with Type.ANIMATED to load gifs.
 
+Min API level 7
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.doctoror.gifimageloader/library/badge.png?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.github.doctoror.gifimageloader/library)
+
+Add this to build.gradle dependencies, replacing x.x.x with version number.
+
+```groovy
+dependencies {
+    compile 'com.github.doctoror.gifimageloader:library:x.x.x'
+}
+```
+
 ##License
 
 ```
