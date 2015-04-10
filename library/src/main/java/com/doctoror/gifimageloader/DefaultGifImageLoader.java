@@ -25,7 +25,7 @@ import android.support.v4.util.LruCache;
 /**
  * The default {@link GifImageLoader} as a singleton with LruCache
  */
-public final class DefaultGifImageLoader extends GifImageLoader {
+public class DefaultGifImageLoader extends GifImageLoader {
 
     private static final Object LOCK = new Object();
 

@@ -58,8 +58,6 @@ public class ImageRequest extends Request<Drawable> {
     /** Decoding lock so that we don't decode more than one image at a time (to avoid OOM's) */
     private static final Object sDecodeLock = new Object();
 
-    private String mImageUrl;
-
     /**
      * Creates a new image request, decoding to a maximum specified width and
      * height. If both width and height are zero, the image will be decoded to
@@ -77,12 +75,13 @@ public class ImageRequest extends Request<Drawable> {
      * @param decodeConfig  Format to decode the bitmap to
      * @param errorListener Error listener, or null to ignore errors
      */
-    public ImageRequest(String url, Response.Listener<Drawable> listener,
-            int maxWidth,
-            int maxHeight,
-            Bitmap.Config decodeConfig, Response.ErrorListener errorListener) {
+    public ImageRequest(final String url,
+            final Response.Listener<Drawable> listener,
+            final int maxWidth,
+            final int maxHeight,
+            final Bitmap.Config decodeConfig,
+            final Response.ErrorListener errorListener) {
         super(Method.GET, url, errorListener);
-        mImageUrl = url;
         setRetryPolicy(
                 new DefaultRetryPolicy(IMAGE_TIMEOUT_MS, IMAGE_MAX_RETRIES, IMAGE_BACKOFF_MULT));
         mListener = listener;
@@ -224,8 +223,7 @@ public class ImageRequest extends Request<Drawable> {
      * @param desiredWidth  Desired width of the bitmap
      * @param desiredHeight Desired height of the bitmap
      */
-    // Visible for testing.
-    static int findBestSampleSize(
+    private static int findBestSampleSize(
             int actualWidth, int actualHeight, int desiredWidth, int desiredHeight) {
         double wr = (double) actualWidth / desiredWidth;
         double hr = (double) actualHeight / desiredHeight;
