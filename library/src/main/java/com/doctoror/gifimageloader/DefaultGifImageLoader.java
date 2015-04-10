@@ -20,9 +20,14 @@ import com.android.volley.toolbox.Volley;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.util.LruCache;
+
+import pl.droidsonroids.gif.GifDrawable;
 
 /**
  * The default {@link GifImageLoader} as a singleton with LruCache
@@ -62,7 +67,7 @@ public final class DefaultGifImageLoader extends GifImageLoader {
         mCacheSize = cacheSize;
     }
 
-    private static final class ImageLruCache extends LruCache<String, Image> implements
+    private static final class ImageLruCache extends LruCache<String, Drawable> implements
             ImageCache {
 
         private static ImageLruCache sInstance;
@@ -86,29 +91,38 @@ public final class DefaultGifImageLoader extends GifImageLoader {
         }
 
         @Override
-        public Image getImage(final String url) {
+        public Drawable getImage(final String url) {
             return get(url);
         }
 
         @Override
-        public void putImage(final String url, final Image image) {
+        public void putImage(final String url, final Drawable image) {
             put(url, image);
         }
 
         @SuppressLint("NewApi")
         @Override
-        protected int sizeOf(final String key, final Image value) {
-            if (value.bitmap != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
-                    return value.bitmap.getByteCount();
-                } else {
-                    return value.bitmap.getRowBytes() * value.bitmap.getHeight();
+        protected int sizeOf(final String key, final Drawable value) {
+            if (value instanceof BitmapDrawable) {
+                final Bitmap bitmap = ((BitmapDrawable) value).getBitmap();
+                if (bitmap != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
+                        return bitmap.getByteCount();
+                    } else {
+                        return bitmap.getRowBytes() * bitmap.getHeight();
+                    }
                 }
             }
-            if (value.movie != null) {
-                // TODO Bad way to determine Movie size. Is there a better way?
-                return (int) (value.movie.width() * value.movie.height() * Math
-                        .max((double) value.movie.duration() / 1000d, 1d));
+            if (value instanceof GifDrawable) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    return (int) ((GifDrawable) value).getAllocationByteCount();
+                }
+                final long length = ((GifDrawable) value).getInputSourceByteCount();
+                if (length != -1) {
+                    return (int) length;
+                }
+                return (((GifDrawable) value).getFrameByteCount() * ((GifDrawable) value)
+                        .getNumberOfFrames());
             }
             return super.sizeOf(key, value);
         }

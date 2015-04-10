@@ -22,19 +22,22 @@ import com.android.volley.toolbox.NetworkImageView;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 
+import pl.droidsonroids.gif.GifImageView;
+
 /**
- * Similar to {@link NetworkImageView} but works with {@link ImageInfo}
+ * Similar to {@link NetworkImageView} but extends {@link GifImageView} and works with {@link GifImageLoader}
  */
 public class NetworkGifImageView extends GifImageView {
 
-    /** The info of the network image to load */
-    private ImageInfo mImageInfo;
+    /** The url of the network image to load */
+    private String mImageUrl;
 
     /**
      * Resource ID of the image to be used as a placeholder until the network image is loaded.
@@ -83,24 +86,15 @@ public class NetworkGifImageView extends GifImageView {
      * calling
      * this function.
      *
-     * @param imageInfo   The info for the icon that should be loaded into this ImageView.
+     * @param url   The url of the image that should be loaded into this ImageView.
      * @param imageLoader ImageLoader that will be used to make the request.
      */
-    public void setImageInfo(@Nullable final ImageInfo imageInfo,
+    public void setImageUrl(@Nullable final String url,
             @Nullable final GifImageLoader imageLoader) {
-        mImageInfo = imageInfo;
+        mImageUrl = url;
         mImageLoader = imageLoader;
         // The URL has potentially changed. See if we need to load it.
         loadImageIfNecessary(false);
-    }
-
-    public void setImageUrl(@Nullable final String url,
-            @Nullable final GifImageLoader imageLoader) {
-        if (url == null) {
-            setImageInfo(null, imageLoader);
-        } else {
-            setImageInfo(new ImageInfo(url, ImageInfo.Type.STATIC), imageLoader);
-        }
     }
 
     /**
@@ -125,7 +119,7 @@ public class NetworkGifImageView extends GifImageView {
     void loadImageIfNecessary(final boolean isInLayoutPass) {
         // if the URL to be loaded in this view is empty, cancel any old requests and clear the
         // currently loaded image.
-        if (mImageInfo == null || isNullOrEmpty(mImageInfo.getUrl())) {
+        if (isNullOrEmpty(mImageUrl)) {
             if (mImageContainer != null) {
                 mImageContainer.cancelRequest();
                 mImageContainer = null;
@@ -155,14 +149,14 @@ public class NetworkGifImageView extends GifImageView {
         int maxHeight = wrapHeight ? 0 : height;
 
         // if there was an old request in this view, check if it needs to be canceled.
-        if (mImageContainer != null && mImageContainer.getRequestInfo() != null) {
-            if (mImageContainer.getRequestInfo().equals(mImageInfo)) {
+        if (mImageContainer != null && mImageContainer.getRequestUrl() != null) {
+            if (mImageContainer.getRequestUrl().equals(mImageUrl)) {
                 // if the request is from the same URL, return.
                 return;
             } else {
                 // if there is a pre-existing request, cancel it if it's fetching a different URL.
                 mImageContainer.cancelRequest();
-                if (!mImageLoader.isCached(mImageInfo, maxWidth, maxHeight)) {
+                if (!mImageLoader.isCached(mImageUrl, maxWidth, maxHeight)) {
                     setDefaultImageOrNull();
                 }
             }
@@ -170,7 +164,7 @@ public class NetworkGifImageView extends GifImageView {
 
         // The pre-existing content of this view didn't match the current URL. Load the new image
         // from the network.
-        mImageContainer = mImageLoader.get(mImageInfo,
+        mImageContainer = mImageLoader.get(mImageUrl,
                 new GifImageLoader.ImageListener() {
                     @Override
                     public void onErrorResponse(final VolleyError error) {
@@ -196,7 +190,7 @@ public class NetworkGifImageView extends GifImageView {
                             return;
                         }
 
-                        onLoadFinished(response.getImage(), response.getRequestInfo());
+                        onLoadFinished(response.getImage(), response.getRequestUrl());
                     }
                 }, maxWidth, maxHeight);
     }
@@ -234,24 +228,18 @@ public class NetworkGifImageView extends GifImageView {
         invalidate();
     }
 
-    private void onLoadFinished(@Nullable final GifImageLoader.Image data,
-            @NonNull final ImageInfo info) {
-        if (mImageInfo != null && objectsEqual(mImageInfo.getUrl(), info.getUrl())) {
+    private void onLoadFinished(@Nullable final Drawable data,
+            @NonNull final String imageUrl) {
+        if (mImageUrl != null && mImageUrl.equals(imageUrl)) {
             if (data == null) {
                 setImageResource(mErrorImageId);
-            } else if (data.movie != null) {
-                setAnimatedGif(data.movie);
             } else {
-                setImageBitmap(data.bitmap);
+                setImageDrawable(data);
             }
         }
     }
 
     private boolean isNullOrEmpty(@Nullable final String string) {
-        return string == null || string.isEmpty();
-    }
-
-    private boolean objectsEqual(@Nullable final Object a, @Nullable final Object b) {
-        return a == b || (a != null && a.equals(b));
+        return string == null || string.length() == 0;
     }
 }

@@ -24,15 +24,22 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
+import com.doctoror.imagefactory.ImageFactory;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Movie;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 /**
- * Like a Volley {@link com.android.volley.toolbox.ImageRequest}, but works with byte[]
+ * Like a Volley {@link com.android.volley.toolbox.ImageRequest}, but works with Drawable
  */
-public class ImageRequest extends Request<GifImageLoader.Image> {
+public class ImageRequest extends Request<Drawable> {
 
     /** Socket timeout in milliseconds for image requests */
     private static final int IMAGE_TIMEOUT_MS = 1000;
@@ -43,7 +50,7 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
     /** Default backoff multiplier for image requests */
     private static final float IMAGE_BACKOFF_MULT = 2f;
 
-    private final Response.Listener<GifImageLoader.Image> mListener;
+    private final Response.Listener<Drawable> mListener;
     private final Bitmap.Config mDecodeConfig;
     private final int mMaxWidth;
     private final int mMaxHeight;
@@ -51,7 +58,7 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
     /** Decoding lock so that we don't decode more than one image at a time (to avoid OOM's) */
     private static final Object sDecodeLock = new Object();
 
-    private ImageInfo mImageInfo;
+    private String mImageUrl;
 
     /**
      * Creates a new image request, decoding to a maximum specified width and
@@ -62,7 +69,7 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
      * be fit in the rectangle of dimensions width x height while keeping its
      * aspect ratio.
      *
-     * @param info          ImageInfo with URL and type of the image
+     * @param url           URL of the image
      * @param listener      Listener to receive the decoded bitmap
      * @param maxWidth      Maximum width to decode this bitmap to, or zero for none
      * @param maxHeight     Maximum height to decode this bitmap to, or zero for
@@ -70,12 +77,12 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
      * @param decodeConfig  Format to decode the bitmap to
      * @param errorListener Error listener, or null to ignore errors
      */
-    public ImageRequest(ImageInfo info, Response.Listener<GifImageLoader.Image> listener,
+    public ImageRequest(String url, Response.Listener<Drawable> listener,
             int maxWidth,
             int maxHeight,
             Bitmap.Config decodeConfig, Response.ErrorListener errorListener) {
-        super(Method.GET, info.getUrl(), errorListener);
-        mImageInfo = info;
+        super(Method.GET, url, errorListener);
+        mImageUrl = url;
         setRetryPolicy(
                 new DefaultRetryPolicy(IMAGE_TIMEOUT_MS, IMAGE_MAX_RETRIES, IMAGE_BACKOFF_MULT));
         mListener = listener;
@@ -126,7 +133,7 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
     }
 
     @Override
-    protected Response<GifImageLoader.Image> parseNetworkResponse(final NetworkResponse response) {
+    protected Response<Drawable> parseNetworkResponse(final NetworkResponse response) {
         // Serialize all decode on a global lock to reduce concurrent heap usage.
         synchronized (sDecodeLock) {
             try {
@@ -141,12 +148,17 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
     /**
      * The real guts of parseNetworkResponse. Broken out for readability.
      */
-    private Response<GifImageLoader.Image> doParse(final NetworkResponse response) {
+    private Response<Drawable> doParse(final NetworkResponse response) {
         final byte[] data = response.data;
-        if (mImageInfo.isAnimated()) {
+        boolean isAnimated;
+        try {
+            isAnimated = ImageFactory.isAnimatedGif(new BufferedInputStream(new ByteArrayInputStream(data)));
+        } catch (IOException e) {
+            isAnimated = false;
+        }
+        if (isAnimated) {
             try {
-                return Response.success(
-                        new GifImageLoader.Image(Movie.decodeByteArray(data, 0, data.length)),
+                return Response.success(ImageFactory.decodeByteArrayOrThrow(null, data, null),
                         HttpHeaderParser.parseCacheHeaders(response));
             } catch (Exception e) {
                 return Response.error(new ParseError());
@@ -172,7 +184,6 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
 
                 // Decode to the nearest power of two scaling factor.
                 decodeOptions.inJustDecodeBounds = false;
-                decodeOptions.inPreferQualityOverSpeed = true;
                 decodeOptions.inSampleSize =
                         findBestSampleSize(actualWidth, actualHeight, desiredWidth, desiredHeight);
                 Bitmap tempBitmap =
@@ -192,14 +203,15 @@ public class ImageRequest extends Request<GifImageLoader.Image> {
             if (bitmap == null) {
                 return Response.error(new ParseError(response));
             } else {
-                return Response.success(new GifImageLoader.Image(bitmap),
-                        HttpHeaderParser.parseCacheHeaders(response));
+                return Response
+                        .success((Drawable) new BitmapDrawable(Resources.getSystem(), bitmap),
+                                HttpHeaderParser.parseCacheHeaders(response));
             }
         }
     }
 
     @Override
-    protected void deliverResponse(GifImageLoader.Image response) {
+    protected void deliverResponse(Drawable response) {
         mListener.onResponse(response);
     }
 

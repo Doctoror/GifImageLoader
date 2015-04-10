@@ -24,7 +24,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 
 import android.graphics.Bitmap;
-import android.graphics.Movie;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
@@ -32,8 +33,11 @@ import android.support.annotation.Nullable;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import pl.droidsonroids.gif.GifDrawable;
+
 /**
- * Like a VolleyImageLoader, but loads byte[] instead of Bitmap
+ * Like a VolleyImageLoader, but loads {@link GifDrawable} or {@link BitmapDrawable} instead of
+ * {@link Bitmap}
  */
 public class GifImageLoader {
 
@@ -68,9 +72,9 @@ public class GifImageLoader {
      */
     public interface ImageCache {
 
-        public Image getImage(@Nullable String url);
+        public Drawable getImage(@Nullable String url);
 
-        public void putImage(String url, Image bytes);
+        public void putImage(String url, Drawable bytes);
     }
 
     /**
@@ -118,16 +122,15 @@ public class GifImageLoader {
     /**
      * Checks if the item is available in the cache.
      *
-     * @param imageInfo The ImageInfo with the url of the remote image
+     * @param imageUrl  The Ithe url of the remote image
      * @param maxWidth  The maximum width of the returned image.
      * @param maxHeight The maximum height of the returned image.
      * @return True if the item exists in cache, false otherwise.
      */
-    public boolean isCached(ImageInfo imageInfo, int maxWidth, int maxHeight) {
+    public boolean isCached(String imageUrl, int maxWidth, int maxHeight) {
         throwIfNotOnMainThread();
 
-        final String cacheKey = getCacheKey(imageInfo == null ? null : imageInfo.getUrl(), maxWidth,
-                maxHeight);
+        final String cacheKey = getCacheKey(imageUrl, maxWidth, maxHeight);
         return mCache.getImage(cacheKey) != null;
     }
 
@@ -138,10 +141,10 @@ public class GifImageLoader {
      * If the default was returned, the {@link ImageLoader} will be invoked when the
      * request is fulfilled.
      *
-     * @param info The ImageInfo with the URL of the image to be loaded.
+     * @param url The URL of the image to be loaded.
      */
-    public ImageContainer get(ImageInfo info, final ImageListener listener) {
-        return get(info, listener, 0, 0);
+    public ImageContainer get(String url, final ImageListener listener) {
+        return get(url, listener, 0, 0);
     }
 
     /**
@@ -150,32 +153,32 @@ public class GifImageLoader {
      * relating to the request (as well as the default image if the requested
      * image is not available).
      *
-     * @param requestInfo   The url of the remote image
+     * @param requestUrl    The url of the remote image
      * @param imageListener The listener to call when the remote image is loaded
      * @param maxWidth      The maximum width of the returned image.
      * @param maxHeight     The maximum height of the returned image.
      * @return A container object that contains all of the properties of the request, as well as
      * the currently available image (default if remote is not loaded).
      */
-    public ImageContainer get(ImageInfo requestInfo, ImageListener imageListener,
+    public ImageContainer get(String requestUrl, ImageListener imageListener,
             int maxWidth, int maxHeight) {
         // only fulfill requests that were initiated from the main thread.
         throwIfNotOnMainThread();
 
-        final String cacheKey = getCacheKey(requestInfo.getUrl(), maxWidth, maxHeight);
+        final String cacheKey = getCacheKey(requestUrl, maxWidth, maxHeight);
 
         // Try to look up the request in the cache of remote images.
-        Image cachedImage = mCache.getImage(cacheKey);
+        Drawable cachedImage = mCache.getImage(cacheKey);
         if (cachedImage != null) {
             // Return the cached bitmap.
-            ImageContainer container = new ImageContainer(cachedImage, requestInfo, null, null);
+            ImageContainer container = new ImageContainer(cachedImage, requestUrl, null, null);
             imageListener.onResponse(container, true);
             return container;
         }
 
         // The bitmap did not exist in the cache, fetch it!
         ImageContainer imageContainer =
-                new ImageContainer(null, requestInfo, cacheKey, imageListener);
+                new ImageContainer(null, requestUrl, cacheKey, imageListener);
 
         // Update the caller to let them know that they should use the default bitmap.
         imageListener.onResponse(imageContainer, true);
@@ -190,7 +193,7 @@ public class GifImageLoader {
 
         // The request is not already in flight. Send the new request to the network and
         // track it.
-        Request<Image> newRequest = makeImageRequest(requestInfo, maxWidth, maxHeight, cacheKey);
+        Request<Drawable> newRequest = makeImageRequest(requestUrl, maxWidth, maxHeight, cacheKey);
 
         mRequestQueue.add(newRequest);
         mInFlightRequests.put(cacheKey,
@@ -198,11 +201,11 @@ public class GifImageLoader {
         return imageContainer;
     }
 
-    protected Request<Image> makeImageRequest(ImageInfo requestInfo, int maxWidth, int maxHeight,
+    protected Request<Drawable> makeImageRequest(String requestUrl, int maxWidth, int maxHeight,
             final String cacheKey) {
-        return new ImageRequest(requestInfo, new Response.Listener<Image>() {
+        return new ImageRequest(requestUrl, new Response.Listener<Drawable>() {
             @Override
-            public void onResponse(final Image response) {
+            public void onResponse(final Drawable response) {
                 onGetImageSuccess(cacheKey, response);
             }
         }, maxWidth, maxHeight,
@@ -230,7 +233,7 @@ public class GifImageLoader {
      * @param cacheKey The cache key that is associated with the image request.
      * @param response The bitmap that was returned from the network.
      */
-    protected void onGetImageSuccess(String cacheKey, Image response) {
+    protected void onGetImageSuccess(String cacheKey, Drawable response) {
         // cache the image that was fetched.
         mCache.putImage(cacheKey, response);
 
@@ -274,7 +277,7 @@ public class GifImageLoader {
          * The most relevant bitmap for the container. If the image was in cache, the
          * Holder to use for the final bitmap (the one that pairs to the requested URL).
          */
-        private Image mImage;
+        private Drawable mImage;
 
         private final ImageListener mListener;
 
@@ -282,19 +285,19 @@ public class GifImageLoader {
         private final String mCacheKey;
 
         /** The request URL that was specified */
-        private final ImageInfo mRequestInfo;
+        private final String mRequestUrl;
 
         /**
          * Constructs a BitmapContainer object.
          *
-         * @param image       The final bitmap (if it exists).
-         * @param requestInfo The requested URL for this container.
-         * @param cacheKey    The cache key that identifies the requested URL for this container.
+         * @param image      The final bitmap (if it exists).
+         * @param requestUrl The requested URL for this container.
+         * @param cacheKey   The cache key that identifies the requested URL for this container.
          */
-        public ImageContainer(Image image, ImageInfo requestInfo,
+        public ImageContainer(Drawable image, String requestUrl,
                 String cacheKey, ImageListener listener) {
             mImage = image;
-            mRequestInfo = requestInfo;
+            mRequestUrl = requestUrl;
             mCacheKey = cacheKey;
             mListener = listener;
         }
@@ -326,18 +329,18 @@ public class GifImageLoader {
         }
 
         /**
-         * Returns the bitmap associated with the request URL if it has been loaded, null
+         * Returns the Drawable associated with the request URL if it has been loaded, null
          * otherwise.
          */
-        public Image getImage() {
+        public Drawable getImage() {
             return mImage;
         }
 
         /**
          * Returns the requested URL for this container.
          */
-        public ImageInfo getRequestInfo() {
-            return mRequestInfo;
+        public String getRequestUrl() {
+            return mRequestUrl;
         }
     }
 
@@ -351,7 +354,7 @@ public class GifImageLoader {
         private final Request<?> mRequest;
 
         /** The result of the request being tracked by this item */
-        private Image mResponseImage;
+        private Drawable mResponseImage;
 
         /** Error if one occurred for this response */
         private VolleyError mError;
@@ -471,24 +474,5 @@ public class GifImageLoader {
             return null;
         }
         return (url.length() + 12) + url;
-    }
-
-    /**
-     * Contains an image. Either a {@link Bitmap} or {@link Movie}.
-     */
-    public static final class Image {
-
-        public final Bitmap bitmap;
-        public final Movie movie;
-
-        Image(final Bitmap bitmap) {
-            this.bitmap = bitmap;
-            this.movie = null;
-        }
-
-        Image(final Movie movie) {
-            this.bitmap = null;
-            this.movie = movie;
-        }
     }
 }

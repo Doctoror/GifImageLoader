@@ -18,7 +18,6 @@ package com.doctoror.gifimageloader.sample;
 
 import com.doctoror.gifimageloader.DefaultGifImageLoader;
 import com.doctoror.gifimageloader.GifImageLoader;
-import com.doctoror.gifimageloader.ImageInfo;
 import com.doctoror.gifimageloader.NetworkGifImageView;
 
 import android.content.Context;
@@ -46,33 +45,31 @@ public class DemoActivity extends ActionBarActivity {
     }
 
     @NonNull
-    private static List<ImageInfo> generateImageInfo() {
-        final List<ImageInfo> list = new ArrayList<>(12);
-        list.add(new ImageInfo("http://i.imgur.com/eezCO.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/0SBuk.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/xzPki.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/f6due.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/6N2Fa.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/tvwQC.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/Gq3F2.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/XAxaV.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/DYO6X.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo("http://i.imgur.com/9DWBx.gif", ImageInfo.Type.ANIMATED));
-        list.add(new ImageInfo(
-                "http://vignette3.wikia.nocookie.net/robber-penguin-agency/images/7/72/Gaming-Rage-Face.jpg/revision/latest?cb=20140618172440",
-                ImageInfo.Type.STATIC));
-        list.add(new ImageInfo(
-                "http://mylolface.com/assets/faces/happy-i-see-what-you-did-there-clean.jpg",
-                ImageInfo.Type.STATIC));
+    private static List<String> generateImageInfo() {
+        final List<String> list = new ArrayList<>(12);
+        list.add("http://i.imgur.com/eezCO.gif");
+        list.add("http://i.imgur.com/0SBuk.gif");
+        list.add("http://i.imgur.com/xzPki.gif");
+        list.add("http://i.imgur.com/f6due.gif");
+        list.add("http://i.imgur.com/6N2Fa.gif");
+        list.add("http://i.imgur.com/tvwQC.gif");
+        list.add("http://i.imgur.com/Gq3F2.gif");
+        list.add("http://i.imgur.com/XAxaV.gif");
+        list.add("http://i.imgur.com/DYO6X.gif");
+        list.add("http://i.imgur.com/9DWBx.gif");
+        list.add(
+                "http://vignette3.wikia.nocookie.net/robber-penguin-agency/images/7/72/Gaming-Rage-Face.jpg/revision/latest?cb=20140618172440");
+        list.add(
+                "http://mylolface.com/assets/faces/happy-i-see-what-you-did-there-clean.jpg");
         return list;
     }
 
-    private static final class DemoAdapter extends BaseAdapter2<ImageInfo> {
+    private static final class DemoAdapter extends BaseAdapter2<String> {
 
         private final GifImageLoader mImageLoader;
 
         private DemoAdapter(@NonNull final Context context,
-                @Nullable final List<ImageInfo> items) {
+                @Nullable final List<String> items) {
             super(context, items);
             mImageLoader = DefaultGifImageLoader
                     .getInstance(context, Configuration.LRU_CACHE_SIZE_IN_BYTES);
@@ -89,7 +86,7 @@ public class DemoActivity extends ActionBarActivity {
                 imageView = (NetworkGifImageView) convertView.getTag();
             }
 
-            imageView.setImageInfo(getItem(position), mImageLoader);
+            imageView.setImageUrl(getItem(position), mImageLoader);
             return convertView;
         }
     }
