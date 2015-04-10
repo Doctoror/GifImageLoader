@@ -1,11 +1,10 @@
 ##Description
 
 GifImageLoader is a library based on Volley ImageLoader that enables the developer to load, show and cache animated gif images as well as static images.
-GifImageView allows to display animated gifs (not currently working with scaleType="center" for some reason).
 
-GifImageView has API just like a normal Volley NetworkImageView by calling setImageUrl() but also has the ability to set ImageInfo with Type.ANIMATED to load gifs.
+The NetworkGifImagerView's API is the same as you expect from a Volley NetworkImageView.
 
-Min API level 7
+Min API level 8
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.doctoror.gifimageloader/library/badge.png?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.github.doctoror.gifimageloader/library)
 
