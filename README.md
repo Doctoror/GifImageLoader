@@ -7,11 +7,13 @@ The NetworkGifImagerView's API is the same as you expect from a Volley NetworkIm
 Min API level 8
 
 
-Add this to build.gradle dependencies
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.doctoror.gifimageloader/library/badge.png?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.github.doctoror.gifimageloader/library)
+
+Add this to build.gradle dependencies, replacing x.x.x with version number
 
 ```groovy
 dependencies {
-    compile 'com.github.doctoror.gifimageloader:library:1.1.0'
+    compile 'com.github.doctoror.gifimageloader:library:x.x.x'
 }
 ```
 
