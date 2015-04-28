@@ -24,6 +24,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -101,7 +102,7 @@ public class NetworkGifImageView extends GifImageView {
      * Sets the default image resource ID to be used for this view until the attempt to load it
      * completes.
      */
-    public void setDefaultImageResId(int defaultImage) {
+    public void setDefaultImageResId(@DrawableRes final int defaultImage) {
         mDefaultImageId = defaultImage;
     }
 
@@ -109,7 +110,7 @@ public class NetworkGifImageView extends GifImageView {
      * Sets the error image resource ID to be used for this view in the event that the image
      * requested fails to load.
      */
-    public void setErrorImageResId(int errorImage) {
+    public void setErrorImageResId(@DrawableRes final int errorImage) {
         mErrorImageId = errorImage;
     }
 
@@ -204,7 +205,7 @@ public class NetworkGifImageView extends GifImageView {
     }
 
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    protected void onLayout(final boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         loadImageIfNecessary(true);
     }
@@ -230,9 +231,13 @@ public class NetworkGifImageView extends GifImageView {
 
     private void onLoadFinished(@Nullable final Drawable data,
             @NonNull final String imageUrl) {
-        if (mImageUrl != null && mImageUrl.equals(imageUrl)) {
+        if (imageUrl.equals(mImageUrl)) {
             if (data == null) {
-                setImageResource(mErrorImageId);
+                if (mErrorImageId != 0) {
+                    setImageResource(mErrorImageId);
+                } else {
+                    setImageDrawable(null);
+                }
             } else {
                 setImageDrawable(data);
             }
